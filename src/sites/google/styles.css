@@ -1,0 +1,139 @@
+/*
+ * No AI: Google Search styles. Injected at document_start.
+ *
+ * State lives on <html>, written by src/core/apply.js:
+ *   data-noai-ready                  settings have been read
+ *   data-noai-overview = on | off
+ *   data-noai-aimode   = on | off
+ *   data-noai-images   = blur | hide | off
+ * Until data-noai-ready is set, flash-guard candidates are hidden. After it
+ * is set, only elements the rules positively identified (data-noai-block,
+ * data-noai-ai-image) are treated, and only while their feature is on.
+ */
+
+/* ---- AI Overview ------------------------------------------------------ */
+
+/* Flash guard. Selectors MUST mirror config.overview.candidateSelectors.
+   Candidates stay hidden only until the rules check them (<= ~1s). */
+html:not([data-noai-ready]) :is(div.hdzaWe, div.YzCcne),
+html[data-noai-overview="on"] :is(div.hdzaWe, div.YzCcne):not([data-noai-checked]) {
+  display: none !important;
+}
+
+html[data-noai-overview="on"] [data-noai-block="overview"]:not([data-noai-revealed]) {
+  display: none !important;
+}
+
+.noai-overview-toggle {
+  display: none;
+}
+
+html[data-noai-overview="on"] .noai-overview-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-height: 32px;
+  margin: 4px 0 16px;
+  padding: 6px 14px;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 16px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+html[data-noai-overview="on"] .noai-overview-toggle::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+html[data-noai-overview="on"] .noai-overview-toggle[aria-expanded="true"]::before {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+html[data-noai-overview="on"] .noai-overview-toggle:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+html[data-noai-overview="on"] .noai-overview-toggle:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 2px;
+}
+
+/* ---- AI Mode tab / button --------------------------------------------- */
+
+/* The udm=50 link is AI Mode by definition, so it is hidden from first
+   paint unless the feature is off. Mirrors config.aiMode.linkSelectors. */
+html:not([data-noai-aimode="off"]) :is(#searchform, form[role="search"], #top_nav, #hdtb, #hdtb-msb, [role="navigation"]) :is(a[href*="udm=50&"], a[href$="udm=50"]),
+html[data-noai-aimode="on"] [data-noai-block="aimode"] {
+  display: none !important;
+}
+
+/* ---- AI-labelled images ----------------------------------------------- */
+
+[data-noai-pos] {
+  position: relative !important;
+}
+
+html[data-noai-images="blur"] [data-noai-ai-image]:not([data-noai-revealed]) [data-noai-target] {
+  filter: blur(24px) saturate(0.7) !important;
+  /* clip-path applies after filter, so the blur can't bleed outside. */
+  clip-path: inset(0) !important;
+}
+
+html[data-noai-images="hide"] [data-noai-ai-image] {
+  display: none !important;
+}
+
+.noai-image-overlay {
+  display: none;
+}
+
+html[data-noai-images="blur"] [data-noai-ai-image]:not([data-noai-revealed]) .noai-image-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  pointer-events: none; /* clicks outside the button still open the image */
+}
+
+.noai-image-reveal {
+  pointer-events: auto;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: rgba(32, 33, 36, 0.82);
+  color: #fff;
+  font: 500 12px/16px system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  text-align: center;
+  white-space: normal;
+  cursor: pointer;
+}
+
+.noai-image-reveal:hover {
+  background: rgba(32, 33, 36, 0.95);
+}
+
+.noai-image-reveal:focus-visible {
+  outline: 2px solid #8ab4f8;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .noai-overview-toggle::before {
+    transition: none !important;
+  }
+}

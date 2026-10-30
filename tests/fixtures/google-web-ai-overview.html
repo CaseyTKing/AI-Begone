@@ -1,0 +1,249 @@
+<!doctype html>
+<!--
+  SYNTHETIC fixture modelled on a Google web results page (/search?q=...)
+  with an AI Overview. It is not a byte-for-byte save of Google's markup:
+  it reproduces the structure the rules depend on (#main/#rcnt/#center_col/
+  #rso columns, header #searchform, #top_nav tabs, an overview block with a
+  heading). When Google changes markup, replace the relevant parts with a
+  fresh "Save page as..." snippet. See tests/MANUAL_TESTS.md.
+
+  Open directly in Chrome (file://) to try it by hand, or add ?autotest to
+  run the assertions (tests/run.sh does this headlessly).
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>coffee - Google Search (fixture)</title>
+  <link rel="stylesheet" href="../../src/sites/google/styles.css">
+  <script src="harness.js" data-page="web"></script>
+  <script src="../../src/platform/browser.js"></script>
+  <script src="../../src/core/settings.js"></script>
+  <script src="../../src/core/registry.js"></script>
+  <script src="../../src/core/observer.js"></script>
+  <script src="../../src/sites/google/config.js"></script>
+  <script src="../../src/sites/google/rules.js"></script>
+  <script src="../../src/core/apply.js"></script>
+  <style>
+    body { margin: 0; font: 14px/1.5 Arial, sans-serif; color: #202124; background: #fff; }
+    @media (prefers-color-scheme: dark) { body { color: #e8eaed; background: #202124; } a { color: #8ab4f8; } }
+    .sfbg { padding: 16px 24px; border-bottom: 1px solid #dadce0; }
+    #searchform { display: flex; gap: 12px; align-items: center; }
+    #searchform input { width: 420px; padding: 8px 14px; border-radius: 20px; border: 1px solid #dadce0; }
+    #top_nav [role="list"] { display: flex; gap: 20px; padding: 8px 24px; }
+    #rcnt { display: flex; padding: 0 24px; }
+    #center_col { width: 650px; }
+    .g { margin: 0 0 24px; }
+    .g h3 { margin: 0; font-size: 20px; font-weight: 400; }
+    .hdzaWe, .aio { margin: 0 0 24px; padding: 16px; border-radius: 12px; background: #f1f4f9; }
+    @media (prefers-color-scheme: dark) { .hdzaWe, .aio { background: #303134; } }
+  </style>
+</head>
+<body>
+  <div class="sfbg">
+    <form id="searchform" role="search" action="/search">
+      <input name="q" value="coffee" aria-label="Search">
+      <a id="hdr-aimode" href="/search?q=coffee&amp;udm=50&amp;aep=11">AI Mode</a>
+    </form>
+  </div>
+
+  <div id="main">
+    <div id="cnt">
+      <div id="top_nav">
+        <div role="navigation">
+          <div role="list">
+            <div role="listitem" id="tab-aimode"><a href="/search?q=coffee&amp;sca_esv=1&amp;udm=50">AI Mode</a></div>
+            <div role="listitem" id="tab-all"><a href="/search?q=coffee" aria-current="page">All</a></div>
+            <div role="listitem" id="tab-images"><a href="/search?q=coffee&amp;udm=2">Images</a></div>
+            <div role="listitem" id="tab-videos"><a href="/search?q=coffee&amp;udm=7">Videos</a></div>
+            <div role="listitem" id="tab-news"><a href="/search?q=coffee&amp;tbm=nws">News</a></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="rcnt">
+        <div id="center_col">
+          <div id="search">
+            <div id="rso">
+              <div class="MjjYud" id="aio-wrap">
+                <div class="hdzaWe" id="aio">
+                  <div class="Fzsovc"><h1 class="VW3apb">AI Overview</h1></div>
+                  <div class="LT6XE">
+                    <p>Coffee is a beverage brewed from roasted coffee beans. It is one of the most popular drinks in the world…</p>
+                    <ul><li>Caffeine content varies by brew method.</li><li>Arabica and robusta are the main species.</li></ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="MjjYud"><div class="g" id="r1"><a href="https://en.wikipedia.org/wiki/Coffee"><h3>Coffee - Wikipedia</h3></a><div>Coffee is a beverage brewed from roasted, ground coffee beans…</div></div></div>
+              <div class="MjjYud"><div class="g" id="r-decoy"><a href="https://support.google.com/aio"><h3>AI Overview</h3></a><div>An organic result whose title is exactly the label. Must stay visible.</div></div></div>
+              <div class="MjjYud"><div class="g" id="r2"><a href="https://www.ncausa.org/"><h3>National Coffee Association</h3></a><div>Everything about coffee…</div></div></div>
+              <div class="MjjYud" id="unsafe-wrap">
+                <h2>AI Overview</h2>
+                <div class="g" id="r3"><a href="https://example.com/"><h3>Result sharing a wrapper with an overview-like heading</h3></a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const rso = () => document.getElementById('rso');
+      let n = 10;
+
+      function result(title) {
+        const d = document.createElement('div');
+        d.className = 'MjjYud';
+        d.innerHTML = `<div class="g" id="r${++n}"><a href="https://example.com/${n}"><h3>${title} ${n}</h3></a><div>More results…</div></div>`;
+        return d;
+      }
+
+      window.fixtureActions = [
+        {
+          label: 'Late overview (streamed, no hint class)',
+          run: () => {
+            const wrap = document.createElement('div');
+            wrap.className = 'MjjYud';
+            wrap.id = 'late-wrap';
+            wrap.innerHTML = '<div class="aio" id="late-aio"><div role="heading" aria-level="2" id="late-heading"></div><div class="body">Loading…</div></div>';
+            rso().prepend(wrap);
+            setTimeout(() => {
+              document.getElementById('late-heading').textContent = 'AI Overview';
+              wrap.querySelector('.body').textContent = 'A late, streamed AI answer.';
+            }, 300);
+          },
+        },
+        {
+          label: 'Infinite scroll: append 5 results',
+          run: () => { for (let i = 0; i < 5; i++) rso().appendChild(result('Appended result')); },
+        },
+        {
+          label: 'Non-English: lang=de + German overview',
+          run: () => {
+            document.documentElement.lang = 'de';
+            const wrap = document.createElement('div');
+            wrap.className = 'MjjYud';
+            wrap.id = 'de-wrap';
+            wrap.innerHTML = '<div class="aio"><h2 id="de-heading">Übersicht mit KI</h2><p>Kaffee ist ein Getränk…</p></div>';
+            rso().prepend(wrap);
+          },
+        },
+        {
+          label: 'Selector failure: unknown markup',
+          run: () => {
+            const a = document.createElement('div');
+            a.className = 'MjjYud';
+            a.innerHTML = '<div class="hdzaWe" id="hint-no-label"><h2>Top stories</h2><p>Hint class but no AI label.</p></div>';
+            const b = document.createElement('div');
+            b.className = 'MjjYud';
+            b.innerHTML = '<div class="aio" id="renamed"><h2>AI Summary (renamed)</h2><p>Label text we do not know.</p></div>';
+            rso().prepend(a, b);
+          },
+        },
+      ];
+      const action = (i) => window.fixtureActions[i].run();
+
+      const { settle, wait, setSettings, isHidden } = window.fixture;
+      const $ = (id) => document.getElementById(id);
+      const assert = (cond, msg) => { if (!cond) throw new Error(msg); };
+      const toggle = () => $('aio-wrap').previousElementSibling;
+
+      window.fixtureTests = [
+        ['ready attribute and defaults written', () => {
+          const h = document.documentElement;
+          assert(h.hasAttribute('data-noai-ready'), 'no data-noai-ready');
+          assert(h.getAttribute('data-noai-overview') === 'on', 'overview not on');
+          assert(h.getAttribute('data-noai-aimode') === 'on', 'aimode not on');
+          assert(h.getAttribute('data-noai-images') === 'off', 'images should be off on web page');
+        }],
+        ['AI Overview hidden behind toggle button', () => {
+          assert(isHidden($('aio-wrap')), 'overview visible');
+          const b = toggle();
+          assert(b && b.matches('button.noai-overview-toggle'), 'no toggle before overview');
+          assert(b.getAttribute('aria-expanded') === 'false', 'aria-expanded not false');
+          assert(b.getAttribute('aria-controls') === 'aio-wrap', 'aria-controls wrong');
+          assert(!isHidden(b), 'toggle not visible');
+        }],
+        ['organic results untouched (incl. decoy titled "AI Overview")', () => {
+          for (const id of ['r1', 'r2', 'r-decoy']) assert(!isHidden($(id)), id + ' hidden');
+          assert(document.querySelectorAll('.noai-overview-toggle').length === 1, 'extra toggles');
+        }],
+        ['unsafe wrapper (heading + organic result) left alone', () => {
+          assert(!isHidden($('unsafe-wrap')), 'unsafe wrapper hidden');
+          assert(!$('unsafe-wrap').hasAttribute('data-noai-block'), 'unsafe wrapper marked');
+        }],
+        ['toggle reveals and re-hides', async () => {
+          toggle().click();
+          await settle();
+          assert(!isHidden($('aio-wrap')), 'not revealed');
+          assert(toggle().getAttribute('aria-expanded') === 'true', 'aria-expanded not true');
+          assert(toggle().textContent === 'Hide AI Overview', 'label not updated');
+          toggle().click();
+          await settle();
+          assert(isHidden($('aio-wrap')), 'not re-hidden');
+        }],
+        ['AI Mode tab and header button hidden, other tabs visible', () => {
+          assert(isHidden($('tab-aimode')), 'AI Mode tab visible');
+          assert($('tab-aimode').getAttribute('data-noai-block') === 'aimode', 'listitem not marked');
+          assert(isHidden($('hdr-aimode')), 'header AI Mode visible');
+          for (const id of ['tab-all', 'tab-images', 'tab-videos', 'tab-news']) assert(!isHidden($(id)), id + ' hidden');
+        }],
+        ['overview toggle off/on applies live', async () => {
+          await setSettings({ overview: false });
+          assert(!isHidden($('aio-wrap')), 'overview still hidden when off');
+          assert(isHidden(toggle()), 'button visible when off');
+          await setSettings({ overview: true });
+          assert(isHidden($('aio-wrap')), 'overview not hidden when back on');
+        }],
+        ['AI Mode toggle off/on applies live', async () => {
+          await setSettings({ aiModeTab: false });
+          assert(!isHidden($('tab-aimode')) && !isHidden($('hdr-aimode')), 'AI Mode still hidden when off');
+          await setSettings({ aiModeTab: true });
+          assert(isHidden($('tab-aimode')) && isHidden($('hdr-aimode')), 'AI Mode visible when back on');
+        }],
+        ['master off disables all; on restores individual toggles', async () => {
+          await setSettings({ aiModeTab: false });
+          await setSettings({ master: false });
+          assert(!isHidden($('aio-wrap')), 'overview hidden with master off');
+          assert(!isHidden($('tab-aimode')), 'AI Mode hidden with master off');
+          await setSettings({ master: true });
+          assert(isHidden($('aio-wrap')), 'overview not restored');
+          assert(!isHidden($('tab-aimode')), 'AI Mode toggle (off) not preserved');
+          await setSettings({ aiModeTab: true });
+        }],
+        ['late-loading streamed overview gets hidden', async () => {
+          action(0);
+          await wait(450);
+          await settle();
+          assert(isHidden($('late-wrap')), 'late overview visible');
+          assert($('late-wrap').previousElementSibling.matches('.noai-overview-toggle'), 'no toggle for late overview');
+        }],
+        ['infinite scroll results stay visible', async () => {
+          action(1);
+          await settle();
+          const appended = [...document.querySelectorAll('#rso .g')].slice(-5);
+          assert(appended.length === 5 && appended.every((el) => !isHidden(el)), 'appended results hidden');
+        }],
+        ['non-English (lang=de) overview hidden', async () => {
+          action(2);
+          await settle();
+          assert(isHidden($('de-wrap')), 'German overview visible');
+          document.documentElement.lang = 'en';
+        }],
+        ['selector failure: unknown markup shown, nothing broken', async () => {
+          action(3);
+          await settle();
+          assert(!isHidden($('renamed')), 'unknown label hidden');
+          await wait(1200);
+          await settle();
+          assert(!isHidden($('hint-no-label')), 'unverified hint still hidden after timeout');
+          assert($('hint-no-label').getAttribute('data-noai-checked') === 'pass', 'hint not released');
+          assert(!isHidden($('r1')), 'results broken');
+        }],
+      ];
+    })();
+  </script>
+</body>
+</html>

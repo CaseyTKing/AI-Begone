@@ -1,0 +1,222 @@
+<!doctype html>
+<!--
+  SYNTHETIC fixture modelled on Google Images (/search?q=...&udm=2) with
+  AI-labelled results. Reproduces what the rules depend on: result cards
+  (div[jsname="dTDiAc"][data-docid]) in a wrapping flex grid, a thumbnail in
+  <g-img>, label text/badges inside cards, and a detail panel
+  ([role="dialog"]) whose label may be the only AI indicator.
+
+  Cards:
+    d1, d3, d4, d6  no label (must never be touched)
+    d2              visible "AI-generated" text label in the card
+    d5              badge with aria-label="Made with Google AI"
+    d7              label ONLY in the detail panel (click it to open)
+    d8              card titled "Is this AI-generated? A guide" (substring,
+                    not a label; must stay untouched)
+
+  Open directly in Chrome, or add ?autotest to run assertions.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>mountains - Google Images (fixture)</title>
+  <link rel="stylesheet" href="../../src/sites/google/styles.css">
+  <script src="harness.js" data-page="images"></script>
+  <script src="../../src/platform/browser.js"></script>
+  <script src="../../src/core/settings.js"></script>
+  <script src="../../src/core/registry.js"></script>
+  <script src="../../src/core/observer.js"></script>
+  <script src="../../src/sites/google/config.js"></script>
+  <script src="../../src/sites/google/rules.js"></script>
+  <script src="../../src/core/apply.js"></script>
+  <style>
+    body { margin: 0; font: 13px/1.4 Arial, sans-serif; color: #202124; background: #fff; }
+    @media (prefers-color-scheme: dark) { body { color: #e8eaed; background: #202124; } }
+    .sfbg { padding: 16px 24px; border-bottom: 1px solid #dadce0; }
+    #top_nav [role="list"] { display: flex; gap: 20px; padding: 8px 24px; }
+    #rcnt { display: flex; gap: 16px; padding: 0 24px; align-items: flex-start; }
+    #grid { display: flex; flex-wrap: wrap; gap: 12px; flex: 1; }
+    div[jsname="dTDiAc"] { width: 180px; }
+    div[jsname="dTDiAc"] a { display: block; }
+    g-img { display: block; }
+    g-img img { display: block; width: 180px; height: 130px; border-radius: 8px; }
+    .title { margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .badge { font-size: 11px; color: #5f6368; }
+    #panel { width: 340px; min-height: 200px; padding: 12px; border-left: 1px solid #dadce0; }
+    #panel .viewer { display: block; }
+    #panel .viewer img { display: block; width: 320px; height: 230px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="sfbg">
+    <form id="searchform" role="search" action="/search"><input name="q" value="mountains" aria-label="Search"></form>
+  </div>
+  <div id="main">
+    <div id="top_nav">
+      <div role="navigation"><div role="list">
+        <div role="listitem" id="tab-aimode"><a href="/search?q=mountains&amp;udm=50">AI Mode</a></div>
+        <div role="listitem" id="tab-all"><a href="/search?q=mountains">All</a></div>
+        <div role="listitem" id="tab-images"><a href="/search?q=mountains&amp;udm=2" aria-current="page">Images</a></div>
+      </div></div>
+    </div>
+    <div id="rcnt">
+      <div id="grid"></div>
+      <div id="panel" role="dialog" aria-label="Image preview"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const COLORS = ['#7aa6c2', '#c27a7a', '#8fc27a', '#c2b37a', '#a07ac2', '#7ac2b8', '#c27ab0', '#7a87c2'];
+      function svg(i) {
+        const c = COLORS[i % COLORS.length];
+        return 'data:image/svg+xml,' + encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="180" height="130"><rect width="180" height="130" fill="${c}"/>` +
+          `<path d="M0 130 L60 50 L95 95 L125 60 L180 130Z" fill="#fff" opacity=".55"/><text x="10" y="22" font-size="16" font-family="Arial">#${i}</text></svg>`);
+      }
+      const ITEMS = {
+        d1: { title: 'Alpine lake at dawn', site: 'example.org' },
+        d2: { title: 'Fantasy peaks', site: 'art.example', label: '<span class="badge">AI-generated</span>' },
+        d3: { title: 'Matterhorn', site: 'wiki.example' },
+        d4: { title: 'Hiking trail', site: 'trails.example' },
+        d5: { title: 'Neon mountains', site: 'gen.example', label: '<span class="badge" role="img" aria-label="Made with Google AI">✦</span>' },
+        d6: { title: 'Snowy ridge', site: 'photo.example' },
+        d7: { title: 'Dreamlike valley', site: 'mystery.example', panelOnly: true },
+        d8: { title: 'Is this AI-generated? A guide', site: 'blog.example' },
+      };
+      let counter = 0;
+      const grid = document.getElementById('grid');
+      const panel = document.getElementById('panel');
+
+      function card(id, item) {
+        const i = ++counter;
+        item.src = svg(i);
+        const d = document.createElement('div');
+        d.setAttribute('jsname', 'dTDiAc');
+        d.dataset.docid = id;
+        d.id = 'card-' + id;
+        d.innerHTML =
+          `<a href="#" class="open"><g-img><img alt="${item.title}" src="${item.src}"></g-img></a>` +
+          `<div class="title">${item.title}</div><div class="badge">${item.site} ${item.label || ''}</div>`;
+        d.querySelector('a').addEventListener('click', (e) => { e.preventDefault(); openPanel(id); });
+        return d;
+      }
+
+      function openPanel(id) {
+        const item = ITEMS[id];
+        panel.innerHTML =
+          `<div data-docid="${id}"><a class="viewer" href="#"><img jsname="kn3ccd" alt="${item.title}" src="${item.src}"></a>` +
+          `<h2>${item.title}</h2><div>${item.site}</div>` +
+          (item.panelOnly || item.label ? '<div class="about">Made with Google AI</div>' : '') +
+          `</div>`;
+      }
+      window.openPanel = openPanel;
+
+      for (const [id, item] of Object.entries(ITEMS)) grid.appendChild(card(id, item));
+
+      window.fixtureActions = [
+        { label: 'Open panel: d7 (label only in panel)', run: () => openPanel('d7') },
+        { label: 'Open panel: d1 (not AI)', run: () => openPanel('d1') },
+        {
+          label: 'Infinite scroll: append 4 (1 AI)',
+          run: () => {
+            for (const id of ['d9', 'd10', 'd11', 'd12']) {
+              ITEMS[id] = { title: 'More ' + id, site: 'more.example', label: id === 'd10' ? '<span class="badge">AI-generated</span>' : '' };
+              grid.appendChild(card(id, ITEMS[id]));
+            }
+          },
+        },
+      ];
+
+      const { settle, setSettings, isHidden } = window.fixture;
+      const $ = (id) => document.getElementById(id);
+      const assert = (cond, msg) => { if (!cond) throw new Error(msg); };
+      const blurred = (id) => {
+        const img = $('card-' + id).querySelector('img');
+        return getComputedStyle(img).filter.includes('blur');
+      };
+      const overlayBtn = (root) => root.querySelector('.noai-image-reveal');
+
+      window.fixtureTests = [
+        ['ready; overview off on images page', () => {
+          const h = document.documentElement;
+          assert(h.getAttribute('data-noai-images') === 'blur', 'images not blur');
+          assert(h.getAttribute('data-noai-overview') === 'off', 'overview should be off here');
+        }],
+        ['labelled cards blurred with overlay button', () => {
+          for (const id of ['d2', 'd5']) {
+            assert(blurred(id), id + ' not blurred');
+            const b = overlayBtn($('card-' + id));
+            assert(b && !isHidden(b), id + ' no visible overlay button');
+            assert(b.textContent === 'AI-generated · Show anyway', id + ' wrong button text');
+          }
+        }],
+        ['unlabelled and substring-only cards untouched', () => {
+          for (const id of ['d1', 'd3', 'd4', 'd6', 'd7', 'd8']) {
+            assert(!blurred(id), id + ' blurred');
+            assert(!$('card-' + id).hasAttribute('data-noai-ai-image'), id + ' marked');
+          }
+        }],
+        ['"Show anyway" reveals only that image and does not open it', async () => {
+          overlayBtn($('card-d2')).click();
+          await settle();
+          assert(!blurred('d2'), 'd2 still blurred');
+          assert(blurred('d5'), 'd5 revealed too');
+          assert(panel.innerHTML === '', 'click opened the panel');
+        }],
+        ['panel-only label: panel image and matching thumbnail treated', async () => {
+          openPanel('d7');
+          await settle();
+          const pimg = panel.querySelector('img');
+          assert(getComputedStyle(pimg).filter.includes('blur'), 'panel image not blurred');
+          assert(overlayBtn(panel), 'no panel overlay');
+          assert(blurred('d7'), 'grid thumbnail d7 not linked');
+        }],
+        ['panel reused for a non-AI image clears treatment', async () => {
+          openPanel('d1');
+          await settle();
+          const pimg = panel.querySelector('img');
+          assert(!getComputedStyle(pimg).filter.includes('blur'), 'non-AI panel image blurred');
+          assert(!overlayBtn(panel), 'stale panel overlay');
+        }],
+        ['revealing in panel also reveals the grid twin', async () => {
+          openPanel('d5');
+          await settle();
+          overlayBtn(panel).click();
+          await settle();
+          assert(!getComputedStyle(panel.querySelector('img')).filter.includes('blur'), 'panel still blurred');
+          assert(!blurred('d5'), 'grid twin still blurred');
+          panel.innerHTML = '';
+          await settle();
+        }],
+        ['hide mode collapses cards; grid reflows without gaps', async () => {
+          const before = $('card-d3').getBoundingClientRect().left;
+          await setSettings({ imageMode: 'hide' });
+          for (const id of ['d2', 'd5', 'd7']) assert(isHidden($('card-' + id)), id + ' not hidden');
+          assert(!isHidden($('card-d3')), 'd3 hidden');
+          const after = $('card-d3').getBoundingClientRect().left;
+          assert(after < before, 'grid did not reflow (d3 did not move left)');
+        }],
+        ['images toggle off shows everything; master off too', async () => {
+          await setSettings({ images: false });
+          for (const id of ['d2', 'd5', 'd7']) assert(!isHidden($('card-' + id)) && !blurred(id), id + ' still treated');
+          await setSettings({ images: true, master: false });
+          for (const id of ['d2', 'd5', 'd7']) assert(!isHidden($('card-' + id)) && !blurred(id), id + ' treated with master off');
+          await setSettings({ master: true, imageMode: 'blur' });
+          assert(blurred('d5') === false && blurred('d7'), 'state not restored');
+        }],
+        ['infinite scroll: new labelled card treated, others not', async () => {
+          window.fixtureActions[2].run();
+          await settle();
+          assert(blurred('d10'), 'd10 not blurred');
+          for (const id of ['d9', 'd11', 'd12']) assert(!blurred(id), id + ' blurred');
+        }],
+        ['AI Mode tab hidden on images page', () => {
+          assert(isHidden($('tab-aimode')), 'AI Mode tab visible');
+          assert(!isHidden($('tab-all')), 'All tab hidden');
+        }],
+      ];
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="light dark">
+  <title>No AI</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="popup">
+    <header class="header">
+      <img src="../../icons/icon-32.png" alt="" width="20" height="20">
+      <h1>No AI</h1>
+    </header>
+
+    <div class="row row--master">
+      <label class="row__text" for="master">
+        <span class="row__title">Remove all AI</span>
+        <span class="row__hint" id="master-hint">Turns every feature on or off</span>
+      </label>
+      <input class="switch" type="checkbox" role="switch" id="master" data-setting="master" aria-describedby="master-hint">
+    </div>
+
+    <fieldset class="features" id="features">
+      <legend class="visually-hidden">Features</legend>
+
+      <div class="row">
+        <label class="row__text" for="overview">
+          <span class="row__title">AI Overview</span>
+          <span class="row__hint" id="overview-hint">Collapse it behind a button</span>
+        </label>
+        <input class="switch" type="checkbox" role="switch" id="overview" data-setting="overview" aria-describedby="overview-hint">
+      </div>
+
+      <div class="row">
+        <label class="row__text" for="aiModeTab">
+          <span class="row__title">AI Mode tab</span>
+          <span class="row__hint" id="aiModeTab-hint">Hide the tab and button</span>
+        </label>
+        <input class="switch" type="checkbox" role="switch" id="aiModeTab" data-setting="aiModeTab" aria-describedby="aiModeTab-hint">
+      </div>
+
+      <div class="row">
+        <label class="row__text" for="images">
+          <span class="row__title">AI images</span>
+          <span class="row__hint" id="images-hint">Only images Google labels as AI</span>
+        </label>
+        <input class="switch" type="checkbox" role="switch" id="images" data-setting="images" aria-describedby="images-hint">
+      </div>
+
+      <fieldset class="segmented" id="imageMode">
+        <legend class="visually-hidden">AI image treatment</legend>
+        <input type="radio" name="imageMode" id="imageMode-blur" value="blur">
+        <label for="imageMode-blur">Blur</label>
+        <input type="radio" name="imageMode" id="imageMode-hide" value="hide">
+        <label for="imageMode-hide">Hide</label>
+      </fieldset>
+
+      <div class="row">
+        <label class="row__text" for="imageQueryExclude">
+          <span class="row__title">Filter search queries</span>
+          <span class="row__hint" id="imageQueryExclude-hint">Append -ai terms to searches</span>
+        </label>
+        <input class="switch" type="checkbox" role="switch" id="imageQueryExclude" data-setting="imageQueryExclude" aria-describedby="imageQueryExclude-hint">
+      </div>
+
+      <div class="row">
+        <label class="row__text" for="imageDebug">
+          <span class="row__title">Debug mode</span>
+          <span class="row__hint" id="imageDebug-hint">Log matched images to console</span>
+        </label>
+        <input class="switch" type="checkbox" role="switch" id="imageDebug" data-setting="imageDebug" aria-describedby="imageDebug-hint">
+      </div>
+    </fieldset>
+
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="../platform/browser.js"></script>
+  <script src="../core/settings.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
